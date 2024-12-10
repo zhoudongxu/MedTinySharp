@@ -1,0 +1,71 @@
+﻿// <copyright file="ZenParameterExpr.cs" company="Microsoft">
+// Copyright (c) Microsoft. All rights reserved.
+// </copyright>
+
+namespace ZenLib
+{
+    using System.Diagnostics.CodeAnalysis;
+    using System.Threading;
+
+    /// <summary>
+    /// A function argument placeholder expression..
+    /// </summary>
+    /// <typeparam name="T">Type of an underlying C# value.</typeparam>
+    internal sealed class ZenParameterExpr<T> : Zen<T>
+    {
+        /// <summary>
+        /// Gets the unique id for the object.
+        /// </summary>
+        public long ParameterId { get; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ZenParameterExpr{T}"/> class.
+        /// </summary>
+        public ZenParameterExpr()
+        {
+            this.ParameterId = Interlocked.Increment(ref ZenArgumentId.nextId);
+        }
+
+        /// <summary>
+        /// Convert the expression to a string.
+        /// </summary>
+        /// <returns>The string representation.</returns>
+        [ExcludeFromCodeCoverage]
+        public override string ToString()
+        {
+            return $"Param({this.ParameterId})";
+        }
+
+        /// <summary>
+        /// Implementing the visitor interface.
+        /// </summary>
+        /// <param name="visitor">The visitor object.</param>
+        /// <param name="parameter">The visitor parameter.</param>
+        /// <typeparam name="TParam">The visitor parameter type.</typeparam>
+        /// <typeparam name="TReturn">The visitor return type.</typeparam>
+        /// <returns>A return value.</returns>
+        internal override TReturn Accept<TParam, TReturn>(ZenExprVisitor<TParam, TReturn> visitor, TParam parameter)
+        {
+            return visitor.VisitParameter(this, parameter);
+        }
+
+        /// <summary>
+        /// Implementing the visitor interface.
+        /// </summary>
+        /// <param name="visitor">The visitor object.</param>
+        internal override void Accept(ZenExprActionVisitor visitor)
+        {
+            visitor.Visit(this);
+        }
+    }
+
+    /// <summary>
+    /// Placeholder for the next unique id for an argument expression.
+    /// This is kept outside the class to avoid having a separate id
+    /// for each instantiation of the generic type T.
+    /// </summary>
+    internal static class ZenArgumentId
+    {
+        internal static long nextId;
+    }
+}

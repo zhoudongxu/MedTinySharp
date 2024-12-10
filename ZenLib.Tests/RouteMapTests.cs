@@ -1,0 +1,86 @@
+﻿// <copyright file="AclTests.cs" company="Microsoft">
+// Copyright (c) Microsoft. All rights reserved.
+// </copyright>
+
+namespace ZenLib.Tests
+{
+    using System;
+    using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using ZenLib;
+    using ZenLib.Tests.Network;
+    using static ZenLib.Zen;
+
+    /// <summary>
+    /// Tests for Zen with route maps.
+    /// </summary>
+    [TestClass]
+    [ExcludeFromCodeCoverage]
+    public class RouteMapTests
+    {
+        /// <summary>
+        /// Test verification for a route map.
+        /// </summary>
+        [TestMethod]
+        public void TestRouteMapVerify()
+        {
+            var routeMap = ExampleRouteMap();
+
+            var timer = System.Diagnostics.Stopwatch.StartNew();
+            var function = new ZenFunction<Route, Pair<Option<Route>, int>>(r => routeMap.ProcessProvenance(r));
+            var result = function.Find((route, outputRoute) => outputRoute.Item2() == 3);
+            var input = result.Value;
+            var output = function.Evaluate(input);
+        }
+
+        /// <summary>
+        /// Creates an example route map.
+        /// </summary>
+        /// <returns></returns>
+        private RouteMap ExampleRouteMap()
+        {
+            var line1 = new RouteMapLine
+            {
+                PrefixGuard = (0, 0, 32),
+                CommunityGuard = new List<uint> { 5U },
+                CommunityAdds = new List<uint> { },
+                CommunityDeletes = new List<uint> { },
+                AsPathPrepends = new List<uint> { },
+                Disposition = Disposition.Deny,
+            };
+
+            var line2 = new RouteMapLine
+            {
+                PrefixGuard = (0, 16, 32),
+                CommunityGuard = new List<uint> { 4U },
+                CommunityAdds = new List<uint> { 5U },
+                CommunityDeletes = new List<uint> { 4U },
+                AsPathPrepends = new List<uint> { },
+                Disposition = Disposition.NextTerm,
+            };
+
+            var line3 = new RouteMapLine
+            {
+                PrefixGuard = (0, 0, 32),
+                CommunityGuard = new List<uint> { 5U },
+                CommunityAdds = new List<uint> { },
+                CommunityDeletes = new List<uint> { },
+                AsPathPrepends = new List<uint> { 100U, 100U },
+                Disposition = Disposition.Allow,
+            };
+
+            var line4 = new RouteMapLine
+            {
+                PrefixGuard = (0, 0, 32),
+                CommunityGuard = new List<uint> { },
+                CommunityAdds = new List<uint> { },
+                CommunityDeletes = new List<uint> { },
+                AsPathPrepends = new List<uint> { },
+                Disposition = Disposition.Deny,
+            };
+
+            return new RouteMap { Lines = new List<RouteMapLine> { line1, line2, line3, line4 } };
+        }
+    }
+}
